@@ -87,8 +87,8 @@
   
     tidy: function(){
       this._removeComments();
-      this._removeNonWhiteListedTags();
-      this._removeNonWhiteListedAttrs();
+      this._removeTags();
+      this._removeAttrs();
     },
   
     _removeComments: function(){
@@ -98,7 +98,7 @@
       this.$target.html(html);
     },
   
-    _removeNonWhiteListedTags: function(){
+    _removeTags: function(){
       var _this = this;
   
       // move all span contents to parent nodes
@@ -117,7 +117,7 @@
       });
     },
   
-    _removeNonWhiteListedAttrs: function(){
+    _removeAttrs: function(){
       this.$target.find('p, ul, li').each(function(iter, el){
         for ( var i=0; i < el.attributes.length; i++){
           var name = el.attributes[i].name;
@@ -144,7 +144,8 @@
     this.target = this.$target[0];
     this.options = {
       cssClass: opts.cssClass || 'f-content-section',
-      headingElement: opts.headingElement || 'H2',
+      focusClass: opts.focusClass || 'f-bg-xlight-o-light',
+      headingElement: (opts.headingElement || 'H2').toUpperCase(),
       minHeight: opts.minHeight || 100,
     };
     this.options.tagWhiteList = opts.tagWhiteList || [
@@ -163,21 +164,22 @@
   //  - image insert plugin
   //  - autosave, write to localStorage where available
   //  - keyboard actions (bold, italic, undo, redo)
+  //  - default empty editor to paragraph tag
   
   SimpleEditor.prototype = {
   
     _setupTarget: function(){
+      var _this = this;
+  
       this.$target.addClass(this.options.cssClass);
       this.$target.prop('contentEditable', true);
       this.$target.css({
         outline: 'none',
         minHeight: this.options.minHeight
       });
-  
-      // insert a paragraph tag if the editor is empty
-      if (this.$target.html().length === 0){
-        this.paragraph();
-      }
+      this.$target.on('focus', function(e){
+        $(e.target).toggleClass(_this.options.focusClass);
+      });
     },
   
     _keyboardListeners: function(){
