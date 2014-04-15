@@ -1,0 +1,23 @@
+{
+  "name": "medium-editor",
+  "version": "0.0.0",
+  "authors": [
+    "jimmynicol <james@fundly.com>"
+  ],
+  "keywords": [
+    "html",
+    "editor",
+    "simple"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "fundly-style-guide": "~0.16.2"
+  }
+}

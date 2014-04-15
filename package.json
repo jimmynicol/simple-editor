@@ -1,0 +1,33 @@
+{
+  "name": "simple-editor",
+  "version": "0.0.1",
+  "description": "Medium.com like editor with plugin architecture",
+  "main": "simple_editor.js",
+  "scripts": {
+    "test": "gulp test"
+  },
+  "keywords": [
+    "HTML",
+    "medium",
+    "rich",
+    "text",
+    "editor"
+  ],
+  "author": "James Nicol",
+  "license": "MIT",
+  "devDependencies": {
+    "connect": "~2.14.1",
+    "connect-livereload": "~0.3.2",
+    "gulp": "~3.5.5",
+    "gulp-jshint": "~1.5.3",
+    "gulp-livereload": "~1.2.0",
+    "gulp-load-plugins": "~0.4.0",
+    "gulp-preprocess": "~1.0.1",
+    "gulp-uglify": "~0.2.1",
+    "gulp-util": "~2.2.14",
+    "jshint-stylish": "~0.1.5",
+    "open": "0.0.4",
+    "tiny-lr": "0.0.5",
+    "gulp-rename": "~1.2.0"
+  }
+}
