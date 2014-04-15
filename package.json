@@ -3,6 +3,10 @@
   "version": "0.0.1",
   "description": "Medium.com like editor with plugin architecture",
   "main": "simple_editor.js",
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:jimmynicol/simple-editor.git"
+  },
   "scripts": {
     "test": "gulp test"
   },
@@ -14,6 +18,7 @@
     "editor"
   ],
   "author": "James Nicol",
+  "homepage": "https://github.com/jimmynicol/simple-editor",
   "license": "MIT",
   "devDependencies": {
     "connect": "~2.14.1",
