@@ -140,5 +140,5 @@ gulp.task('gh-pages', function(){
     .pipe(gulp.dest('dist'))
     .pipe(gulp.src('bower_components/fundly-style-guide/dist/fonts/**/*.*'))
     .pipe(gulp.dest('dist/fonts'))
-    // .pipe(ghPages());
+    .pipe(ghPages());
 });
