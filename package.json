@@ -33,6 +33,7 @@
     "jshint-stylish": "~0.1.5",
     "open": "0.0.4",
     "tiny-lr": "0.0.5",
-    "gulp-rename": "~1.2.0"
+    "gulp-rename": "~1.2.0",
+    "map-stream": "~0.1.0"
   }
 }

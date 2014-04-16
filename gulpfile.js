@@ -94,3 +94,35 @@ gulp.task('watch', ['server'], function(){
     gulp.src(event.path).pipe(p.livereload(lr));
   });
 });
+
+
+// --------
+// Task for pushing the project to Github pages
+// --------
+function ghPages(){
+  var map = require('map-stream'),
+      exec = require('child_process').exec,
+      cmd = 'git push origin :gh-pages && git subtree push --prefix dist origin gh-pages';
+
+  return map( function(file, cb){
+    exec(cmd, {}, function(err, stdout, stderr){
+      if(err) {
+        util.log(err);
+      } else {
+        util.log(stdout, stderr);
+      }
+    });
+  });
+}
+
+gulp.task('gh-pages', function(){
+  var distFiles = [
+    'index.html',
+    'simple_editor.js',
+    'bower_components/fundly-style-guide/dist/fundly-style.css'
+  ];
+
+  gulp.src(distFiles)
+    .pipe(gulp.dest('dist/'))
+    .pipe(ghPages);
+});
