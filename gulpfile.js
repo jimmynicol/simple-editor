@@ -133,10 +133,12 @@ gulp.task('gh-pages', function(){
     'bower_components/fundly-style-guide/dist/fundly-style.css'
   ];
 
-  gulp.src('dist/', {read: false})
+  gulp.src('dist/*', {read: false})
     .pipe(p.clean())
     .pipe(gulp.src(distFiles))
     .pipe(p.replace('bower_components/fundly-style-guide/dist/', ''))
-    .pipe(gulp.dest('dist/'))
-    .pipe(ghPages());
+    .pipe(gulp.dest('dist'))
+    .pipe(gulp.src('bower_components/fundly-style-guide/dist/fonts/**/*.*'))
+    .pipe(gulp.dest('dist/fonts'))
+    // .pipe(ghPages());
 });
