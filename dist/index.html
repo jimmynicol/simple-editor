@@ -13,37 +13,37 @@
 <body>
   <div class="f-p-xlarge">
     <ul class="f-list-inline f-font-condensed f-fc-black f-m-b-medium">
-      <li><a href="#" class="js-bold">
-        <span class="fa fa-bold"></span>
-      </a></li>
-      <li><a href="#" class="js-italic">
-        <span class="fa fa-italic"></span>
-      </a></li>
-      <li><a href="#" class="js-link">
-        <span class="fa fa-link"></span>
-      </a></li>
-      <li><a href="#" class="js-unlink">
-        <span class="fa fa-unlink"></span>
-      </a></li>
-      <li><a href="#" class="js-list">
-        <span class="fa fa-list-ul"></span>
-      </a></li>
-      <li class="hint--top" data-hint="Insert Image"><a href="#" class="js-image">
-        <span class="fa fa-picture-o"></span>
-      </a></li>
+      <li class="hint--top" data-hint="Bold">
+        <a href="#" class="js-bold"><span class="fa fa-bold"></span></a>
+      </li>
+      <li class="hint--top" data-hint="Italic">
+        <a href="#" class="js-italic"><span class="fa fa-italic"></span></a>
+      </li>
+      <li class="hint--top" data-hint="Add Link">
+        <a href="#" class="js-link"><span class="fa fa-link"></span></a>
+      </li>
+      <li class="hint--top" data-hint="Remove Link">
+        <a href="#" class="js-unlink"><span class="fa fa-unlink"></span></a>
+      </li>
+      <li class="hint--top" data-hint="Create List">
+        <a href="#" class="js-list"><span class="fa fa-list-ul"></span></a>
+      </li>
+      <li class="hint--top" data-hint="Insert Image">
+        <a href="#" class="js-image"><span class="fa fa-picture-o"></span></a>
+      </li>
       <li class="f-m-l-large"><a href="#" class="js-heading">Heading</a></li>
       <li><a href="#" class="js-paragraph">Paragraph</a></li>
     </ul>
 
-    <div class="f-m-t-medium">
-      <div id="editable">
-      </div>
+    <div class="f-m-t-medium f-b-xlight f-p-medium">
+      <div id="editable" placeholder="This is a placeholder"></div>
     </div>
   </div>
 
   <script>
     $(function(){
-      window.editor = new SimpleEditor('#editable');
+      window.editor = new SimpleEditor( '#editable', { minHeight: 600 } );
+
       $('.js-bold').click(function(e){
         e.preventDefault();
         editor.bold();
