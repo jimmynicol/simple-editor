@@ -91,6 +91,7 @@
       this._removeAttrs();
     },
   
+    // Remove all HTML comments
     _removeComments: function(){
       var html = this.$target.html();
       html = html.replace(/<!--[\s\S]*?-->/g, '');
@@ -98,17 +99,10 @@
       this.$target.html(html);
     },
   
+    // Loop through all elements and remove tags we don't like
     _removeTags: function(){
       var _this = this;
   
-      // move all span contents to parent nodes
-      this.$target.find('span').each(function(i, el){
-        var $el = $(el),
-            text = $(el).text();
-        $el.parent().text(text);
-      });
-  
-      // loop through all elements and remove tags we don't like
       this.$target.find('*').each(function(i, el){
         var tagName = el.tagName.toLowerCase();
         if ( $.inArray(tagName, _this.options.tagWhiteList) === -1 ){
@@ -117,14 +111,23 @@
       });
     },
   
+    // Remove all attributes we dont want
     _removeAttrs: function(){
-      this.$target.find('p, ul, li').each(function(iter, el){
+      var tags = $.map(this.options.tagWhiteList, function(n){
+        if ( n !== 'a' || n !== 'img' ){
+          return n.toLowerCase();
+        }
+      });
+  
+      // remove every attribute for the following tags
+      this.$target.find(tags.join(', ')).each(function(iter, el){
         for ( var i=0; i < el.attributes.length; i++){
           var name = el.attributes[i].name;
           $(el).removeAttr(name);
         }
       });
   
+      // allow href and target for anchor tag
       this.$target.find('a').each(function(iter, el){
         for ( var i=0; i < el.attributes.length; i++ ){
           var name = el.attributes[i].name;
@@ -149,7 +152,7 @@
       minHeight: opts.minHeight || 100,
     };
     this.options.tagWhiteList = opts.tagWhiteList || [
-      'p', 'b', 'strong', 'i', 'em',
+      'p', 'b', 'strong', 'i', 'em', 'span',
       'ul', 'li', 'a', this.options.headingElement
     ];
   
@@ -163,7 +166,6 @@
   //  - link plugin
   //  - image insert plugin
   //  - autosave, write to localStorage where available
-  //  - keyboard actions (bold, italic, undo, redo)
   //  - default empty editor to paragraph tag
   
   SimpleEditor.prototype = {
@@ -185,10 +187,26 @@
     _keyboardListeners: function(){
       var _this = this;
   
+      // handle a paste into the editor
       this.$target.on('paste', null, function(){
         setTimeout(function(){
           _this.tidy();
         }, 100);
+      });
+  
+      // handle keyboard shortcuts
+      this.$target.on('keypress', function(e){
+        if ( e.metaKey === true ){
+          // a shortcut for bold
+          if ( e.which === 98 ){
+            _this.bold();
+          }
+  
+          // a shortcut for italic
+          if ( e.which === 105 ){
+            _this.italic();
+          }
+        }
       });
     },
   
@@ -228,7 +246,17 @@
       this.target.focus();
     },
   
-    content: function(){
+    undo: function(){
+      document.execComment('undo');
+      this.target.focus();
+    },
+  
+    redo: function(){
+      document.execComment('redo');
+      this.target.focus();
+    },
+  
+    contents: function(){
       return $.trim(this.$target.html());
     }
   
