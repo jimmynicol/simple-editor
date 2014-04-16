@@ -102,8 +102,7 @@ gulp.task('watch', ['server'], function(){
 function ghPages(){
   var map = require('map-stream'),
       exec = require('child_process').exec,
-      // cmd = 'git push origin :gh-pages && git subtree push --prefix dist origin gh-pages';
-      cmd = 'git subtree push --prefix dist origin gh-pages';
+      cmd = 'git push origin :gh-pages && git subtree push --prefix dist origin gh-pages';
 
   return map( function(file, cb){
     exec(cmd, {}, function(err, stdout, stderr){
@@ -127,5 +126,11 @@ gulp.task('gh-pages', function(){
 
   gulp.src(distFiles)
     .pipe(gulp.dest('dist/'))
+    .pipe(
+      p.replace(
+        'bower_components/fundly-style-guide/dist/fundly-style.css',
+        'fundly-style.css'
+      )
+    )
     .pipe(ghPages());
 });
