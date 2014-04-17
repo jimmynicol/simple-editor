@@ -155,27 +155,22 @@
   
     bold: function(){
       document.execCommand('bold');
-      this.target.focus();
     },
   
     italic: function(){
       document.execCommand('italic');
-      this.target.focus();
     },
   
     unorderedList: function(){
       document.execCommand('insertUnorderedList');
-      this.target.focus();
     },
   
     heading: function(){
-      document.execCommand('formatBlock', false, this.options.headingElement);
-      this.target.focus();
+      document.execCommand('formatBlock', false, '<' + this.options.headingElement + '>');
     },
   
     paragraph: function(){
-      document.execCommand('formatBlock', false, 'P');
-      this.target.focus();
+      document.execCommand('formatBlock', false, '<P>');
     },
   
     link: function(url){
@@ -183,22 +178,18 @@
       if (this.options.linkTarget.length > 0){
         this.$target.find('a').prop('target', '_blank');
       }
-      this.target.focus();
     },
   
     unlink: function(){
       document.execCommand('unlink');
-      this.target.focus();
     },
   
     undo: function(){
       document.execCommand('undo');
-      this.target.focus();
     },
   
     redo: function(){
       document.execCommand('redo');
-      this.target.focus();
     },
   
     img: function(link){
@@ -221,13 +212,13 @@
     this.options = {
       css: {
         target: opts.cssClass || 'f-content-section',
-        focus: opts.focusClass || 'f-bg-xlight-o-light',
         placeholder: opts.placeholderClass || 'f-fc-medium f-font-italic f-fs-large',
       },
       headingElement: (opts.headingElement || 'h2').toUpperCase(),
       minHeight: opts.minHeight || 100,
       linkTarget: opts.linkTarget || '_blank',
-      placeholder: opts.placeholder || this.$target.attr('placeholder') || null
+      placeholder: opts.placeholder || this.$target.attr('placeholder') || null,
+      placeholderClass: opts.placeholderClass || 'SimpleEditor-placeholder'
     };
   
     this.options.tagWhiteList = opts.tagWhiteList || [
@@ -235,8 +226,8 @@
       'ul', 'li', 'a', this.options.headingElement
     ];
   
-    this._placeholder();
     this._setupTarget();
+    this._placeholder();
     this._keyboardListeners();
   
     this.log('Simple Editor initialized!', target);
@@ -250,16 +241,24 @@
   SimpleEditor.prototype = {
   
     _setupTarget: function(){
-      var _this = this;
+      // create a wrapper for the element
+      this.$target.wrap('<div class="js-simple-editor-wrapper"></div>');
+      $('.js-simple-editor-wrapper').css({
+        position: 'relative',
+        backgroundColor: this.$target.css('backgroundColor'),
+        minHeight: this.options.minHeight
+      });
   
       this.$target.addClass(this.options.css.target);
       this.$target.prop('contentEditable', true);
       this.$target.css({
+        position: 'absolute',
+        top: 0,
+        left: 0,
         outline: 'none',
-        minHeight: this.options.minHeight
-      });
-      this.$target.on('focus', function(e){
-        $(e.target).toggleClass(_this.options.css.focus);
+        width: '100%',
+        minHeight: this.options.minHeight,
+        backgroundColor: 'transparent'
       });
     },
   
@@ -274,14 +273,13 @@
         }, 100);
       });
   
-      // handle keyboard shortcuts
       this.$target.on('keydown', function(e){
+        // handle keyboard shortcuts
         if ( e.metaKey === true ){
           // a shortcut for bold
           if ( e.which === 98 ){
             _this.bold();
           }
-  
           // a shortcut for italic
           if ( e.which === 105 ){
             _this.italic();
@@ -295,11 +293,12 @@
       });
   
       this.$target.on('keyup', function(){
+        // get the active text selection
         var anchorNode = window.getSelection ? window.getSelection().anchorNode : document.activeElement;
   
         // set the text to be a paragraph if it is just a text node
         if (anchorNode && anchorNode.parentNode === _this.target){
-          _this.paragraph();
+          // _this.paragraph();
         }
   
         // if the editor is empty add the placeholder back
@@ -312,20 +311,21 @@
         return;
       }
   
-      if (this.options.placeholder){
+      if (this.options.placeholder && !this.hasPlaceholder){
         var html = '<div contenteditable="false" ';
-        html += 'class="SimpleEditor-placeholder ';
-        html += this.options.css.placeholder + '">';
+        html += 'class="' + this.options.placeholderClass + ' ';
+        html += this.options.css.placeholder + '" ';
+        html += 'style="position:absolute;top:0;left:0;width:105%" ';
+        html += '">';
         html += this.options.placeholder;
         html += '</div>';
-        this.$target.empty().append(html);
+        this.$target.parent().prepend(html);
         this.hasPlaceholder = true;
-        this.target.focus();
       }
     },
   
     _removePlaceholder: function(){
-      this.$target.find('.SimpleEditor-placeholder').remove();
+      this.$target.parent().find('.' + this.options.placeholderClass).remove();
       this.hasPlaceholder = false;
     },
   
