@@ -147,6 +147,16 @@
           }
         }
       });
+  
+      // allow href and target for anchor tag
+      this.$target.find('img').each(function(iter, el){
+        for ( var i=0; i < el.attributes.length; i++ ){
+          var name = el.attributes[i].name;
+          if ( name !== 'src'){
+            $(el).removeAttr(name);
+          }
+        }
+      });
     }
   
   };
@@ -155,27 +165,22 @@
   
     bold: function(){
       document.execCommand('bold');
-      this.target.focus();
     },
   
     italic: function(){
       document.execCommand('italic');
-      this.target.focus();
     },
   
     unorderedList: function(){
       document.execCommand('insertUnorderedList');
-      this.target.focus();
     },
   
     heading: function(){
-      document.execCommand('formatBlock', false, this.options.headingElement);
-      this.target.focus();
+      document.execCommand('formatBlock', false, '<' + this.options.headingElement + '>');
     },
   
     paragraph: function(){
-      document.execCommand('formatBlock', false, 'P');
-      this.target.focus();
+      document.execCommand('formatBlock', false, '<P>');
     },
   
     link: function(url){
@@ -183,26 +188,23 @@
       if (this.options.linkTarget.length > 0){
         this.$target.find('a').prop('target', '_blank');
       }
-      this.target.focus();
     },
   
     unlink: function(){
       document.execCommand('unlink');
-      this.target.focus();
     },
   
     undo: function(){
       document.execCommand('undo');
-      this.target.focus();
     },
   
     redo: function(){
       document.execCommand('redo');
-      this.target.focus();
     },
   
     img: function(link){
       document.execCommand('insertImage', false, link);
+      this._removeAttrs();
     }
   
   };
@@ -221,13 +223,13 @@
     this.options = {
       css: {
         target: opts.cssClass || 'f-content-section',
-        focus: opts.focusClass || 'f-bg-xlight-o-light',
         placeholder: opts.placeholderClass || 'f-fc-medium f-font-italic f-fs-large',
       },
       headingElement: (opts.headingElement || 'h2').toUpperCase(),
       minHeight: opts.minHeight || 100,
       linkTarget: opts.linkTarget || '_blank',
-      placeholder: opts.placeholder || this.$target.attr('placeholder') || null
+      placeholder: opts.placeholder || this.$target.attr('placeholder') || null,
+      placeholderClass: opts.placeholderClass || 'SimpleEditor-placeholder'
     };
   
     this.options.tagWhiteList = opts.tagWhiteList || [
@@ -235,8 +237,8 @@
       'ul', 'li', 'a', this.options.headingElement
     ];
   
-    this._placeholder();
     this._setupTarget();
+    this._placeholder();
     this._keyboardListeners();
   
     this.log('Simple Editor initialized!', target);
@@ -246,6 +248,7 @@
   //  - link plugin
   //  - image insert plugin
   //  - autosave, write to localStorage where available
+  //  - handle adding paragraph when no placeholder in place
   
   SimpleEditor.prototype = {
   
@@ -256,10 +259,13 @@
       this.$target.prop('contentEditable', true);
       this.$target.css({
         outline: 'none',
-        minHeight: this.options.minHeight
+        minHeight: this.options.minHeight,
       });
-      this.$target.on('focus', function(e){
-        $(e.target).toggleClass(_this.options.css.focus);
+  
+      this.$target.on('focus', function(){
+        if (_this.hasPlaceholder){
+          _this.setCursor(0);
+        }
       });
     },
   
@@ -274,14 +280,13 @@
         }, 100);
       });
   
-      // handle keyboard shortcuts
       this.$target.on('keydown', function(e){
+        // handle keyboard shortcuts
         if ( e.metaKey === true ){
           // a shortcut for bold
           if ( e.which === 98 ){
             _this.bold();
           }
-  
           // a shortcut for italic
           if ( e.which === 105 ){
             _this.italic();
@@ -295,13 +300,6 @@
       });
   
       this.$target.on('keyup', function(){
-        var anchorNode = window.getSelection ? window.getSelection().anchorNode : document.activeElement;
-  
-        // set the text to be a paragraph if it is just a text node
-        if (anchorNode && anchorNode.parentNode === _this.target){
-          _this.paragraph();
-        }
-  
         // if the editor is empty add the placeholder back
         _this._placeholder();
       });
@@ -312,20 +310,28 @@
         return;
       }
   
-      if (this.options.placeholder){
-        var html = '<div contenteditable="false" ';
-        html += 'class="SimpleEditor-placeholder ';
-        html += this.options.css.placeholder + '">';
+      if (this.options.placeholder && !this.hasPlaceholder){
+        // add in the placeholder wrapped in a p tag
+        var html = '<p><span contenteditable="false" ';
+        html += 'class="' + this.options.placeholderClass + ' ';
+        html += this.options.css.placeholder + '" ';
+        html += 'style="width:105%" ';
+        html += '">';
         html += this.options.placeholder;
-        html += '</div>';
-        this.$target.empty().append(html);
+        html += '</span></p>';
+  
+        // empty the editor of any random tags, append the placeholder and set
+        // the cursor to the start of the paragraph
+        this.$target.empty();
+        this.$target.append(html);
+        this.setCursor(0);
+  
         this.hasPlaceholder = true;
-        this.target.focus();
       }
     },
   
     _removePlaceholder: function(){
-      this.$target.find('.SimpleEditor-placeholder').remove();
+      this.$target.find('.' + this.options.placeholderClass).remove();
       this.hasPlaceholder = false;
     },
   
@@ -336,6 +342,27 @@
   
     contents: function(){
       return $.trim(this.$target.html());
+    },
+  
+    setCursor: function(position, elem){
+      var range;
+  
+      elem = elem || this.target.lastChild;
+      position = position || ($(elem).text().length - 1);
+      position = position < 0 ? 0 : position;
+  
+      if( document.createRange ){
+        var selection = window.getSelection(),
+            elemText = elem.firstChild;
+  
+        selection.collapse(elemText, position);
+        elem.parentNode.focus();
+      } else {
+        range = document.body.createTextRange();
+        range.moveToElementText(elem);
+        range.collapse(false);
+        range.select();
+      }
     }
   
   };
