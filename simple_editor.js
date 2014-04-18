@@ -147,6 +147,16 @@
           }
         }
       });
+  
+      // allow href and target for anchor tag
+      this.$target.find('img').each(function(iter, el){
+        for ( var i=0; i < el.attributes.length; i++ ){
+          var name = el.attributes[i].name;
+          if ( name !== 'src'){
+            $(el).removeAttr(name);
+          }
+        }
+      });
     }
   
   };
@@ -194,6 +204,7 @@
   
     img: function(link){
       document.execCommand('insertImage', false, link);
+      this._removeAttrs();
     }
   
   };

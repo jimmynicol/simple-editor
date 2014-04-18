@@ -73,6 +73,11 @@
         e.preventDefault();
         editor.unlink();
       });
+      $('.js-image').click(function(e){
+        e.preventDefault();
+        var imgLink = 'https://images.fundly.net/uploads/b5d4b16e-176b-4480-b81e-180cbfe89745.jpg?h=400&w=600';
+        editor.img(imgLink);
+      });
     });
   </script>
 
