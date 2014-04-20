@@ -1,7 +1,8 @@
 /**
  * simple-editor - Medium.com like editor with plugin architecture
  * @author     James Nicol
- * @link       undefined
+ * @repository git@github.com:jimmynicol/simple-editor.git
+ * @link       https://github.com/jimmynicol/simple-editor
  * @license    MIT
  */
 
@@ -314,9 +315,7 @@
         // add in the placeholder wrapped in a p tag
         var html = '<p><span contenteditable="false" ';
         html += 'class="' + this.options.placeholderClass + ' ';
-        html += this.options.css.placeholder + '" ';
-        html += 'style="width:105%" ';
-        html += '">';
+        html += this.options.css.placeholder + '">';
         html += this.options.placeholder;
         html += '</span></p>';
   
@@ -327,12 +326,15 @@
         this.setCursor(0);
   
         this.hasPlaceholder = true;
+  
+        this.log('added placeholder');
       }
     },
   
     _removePlaceholder: function(){
       this.$target.find('.' + this.options.placeholderClass).remove();
       this.hasPlaceholder = false;
+      this.log('removed placeholder');
     },
   
     isEmpty: function(){
@@ -348,8 +350,10 @@
       var range;
   
       elem = elem || this.target.lastChild;
-      position = position || ($(elem).text().length - 1);
+      position = typeof position !== 'undefined' ? position : ($(elem).text().length - 1);
       position = position < 0 ? 0 : position;
+  
+      this.log('setCursor', position, elem);
   
       if( document.createRange ){
         var selection = window.getSelection(),

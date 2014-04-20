@@ -96,6 +96,44 @@ gulp.task('watch', ['server'], function(){
 });
 
 
+gulp.task('dist', function(){
+  var distFiles = [
+    'index.html',
+    'simple_editor.js',
+    'bower_components/fundly-style-guide/dist/fundly-style.css'
+  ];
+
+  return gulp.src('dist/*', {read: false})
+    .pipe(p.clean())
+    .pipe(gulp.src(distFiles))
+    .pipe(p.replace('bower_components/fundly-style-guide/dist/', ''))
+    .pipe(gulp.dest('dist'))
+    .pipe(gulp.src('bower_components/fundly-style-guide/dist/fonts/**/*.*'))
+    .pipe(gulp.dest('dist/fonts'));
+});
+
+
+// --------
+// Task for pushing the project to Github pages
+// --------
+gulp.task('bump:major', ['scripts', 'dist'], function(){
+  gulp.src(['./bower.json', './package.json'])
+    .pipe(p.bump({type:'major'}))
+    .pipe(gulp.dest('./'));
+});
+gulp.task('bump:minor', ['scripts', 'dist'], function(){
+  gulp.src(['./bower.json', './package.json'])
+    .pipe(p.bump({type:'minor'}))
+    .pipe(gulp.dest('./'));
+});
+gulp.task('bump:patch', ['scripts', 'dist'], function(){
+  gulp.src(['./bower.json', './package.json'])
+    .pipe(p.bump({type:'patch'}))
+    .pipe(gulp.dest('./'));
+});
+
+
+
 // --------
 // Task for pushing the project to Github pages
 // --------
@@ -126,19 +164,10 @@ function ghPages(){
   });
 }
 
-gulp.task('gh-pages', function(){
-  var distFiles = [
-    'index.html',
-    'simple_editor.js',
-    'bower_components/fundly-style-guide/dist/fundly-style.css'
-  ];
-
-  gulp.src('dist/*', {read: false})
-    .pipe(p.clean())
-    .pipe(gulp.src(distFiles))
-    .pipe(p.replace('bower_components/fundly-style-guide/dist/', ''))
-    .pipe(gulp.dest('dist'))
-    .pipe(gulp.src('bower_components/fundly-style-guide/dist/fonts/**/*.*'))
-    .pipe(gulp.dest('dist/fonts'))
+gulp.task('gh-pages', ['scripts', 'dist'], function(){
+  gulp.src('./dist/*')
+    .pipe(p.git.add())
+    .pipe(p.git.commit('dist build'))
+    .pipe(p.git.push('origin', 'master'))
     .pipe(ghPages());
 });
