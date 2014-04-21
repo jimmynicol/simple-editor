@@ -496,7 +496,7 @@
     Format
   );
 
-  SimpleEditor.VERSION = '0.2.0';
+  SimpleEditor.VERSION = '0.3.0';
 
   return SimpleEditor;
 }));

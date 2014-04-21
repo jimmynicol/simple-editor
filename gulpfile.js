@@ -96,7 +96,7 @@ gulp.task('watch', ['server'], function(){
 });
 
 
-gulp.task('dist', function(){
+gulp.task('dist', ['scripts'], function(){
   var distFiles = [
     'index.html',
     'simple_editor.js',
@@ -116,17 +116,17 @@ gulp.task('dist', function(){
 // --------
 // Tasks for bumping the version
 // --------
-gulp.task('bump:major', ['scripts', 'dist'], function(){
+gulp.task('bump:major', function(){
   gulp.src(['./bower.json', './package.json'])
     .pipe(p.bump({type:'major'}))
     .pipe(gulp.dest('./'));
 });
-gulp.task('bump:minor', ['scripts', 'dist'], function(){
+gulp.task('bump:minor', function(){
   gulp.src(['./bower.json', './package.json'])
     .pipe(p.bump({type:'minor'}))
     .pipe(gulp.dest('./'));
 });
-gulp.task('bump:patch', ['scripts', 'dist'], function(){
+gulp.task('bump:patch', function(){
   gulp.src(['./bower.json', './package.json'])
     .pipe(p.bump({type:'patch'}))
     .pipe(gulp.dest('./'));
