@@ -5,7 +5,6 @@ var gulp =     require('gulp'),
     p =        require('gulp-load-plugins')({camelize: true}),
     stylish =  require('jshint-stylish'),
     util =     require('gulp-util'),
-    git =      require('gulp-git'),
     lr =       require('tiny-lr')(),
     connect =  require('connect'),
     pkg =      require('./package.json');

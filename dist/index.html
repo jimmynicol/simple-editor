@@ -121,7 +121,11 @@
       $('.js-image').click(function(e){
         e.preventDefault();
         var imgLink = 'https://d8dkyqrw18ein.cloudfront.net/s/977bd995b8a84531cf7d01b9813381bc_ar_w600_h400.jpg';
-        editor.img(imgLink);
+        editor.img(imgLink, function(newImg){
+          $(newImg)
+            .css({ height: '200px' })
+            .attr('data-src', $(newImg).attr('src'));
+        });
       });
     });
   </script>

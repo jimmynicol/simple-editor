@@ -118,12 +118,18 @@
   
       this.log('remove tags');
   
+      // remove tags that are not in the whitelist
       this.$target.find('*').each(function(i, el){
         var tagName = el.tagName.toLowerCase();
         if ( $.inArray(tagName, _this.options.tagWhiteList) === -1 ){
           $(el).remove();
         }
       });
+  
+      // remove empty inline elements, then any block level ones
+      this.$target.find('span:empty, a:empty, b:empty, i:empty, strong:empty, em:empty').remove();
+      this.$target.find('p:empty, li:empty').remove();
+      this.$target.find(this.options.headingElement + ':empty, ul:empty');
     },
   
     // Remove all attributes we dont want
@@ -206,21 +212,33 @@
   
     redo: function(){ this._execCmd('redo'); },
   
-    img: function(url, opts, cb){
+    img: function(url, cb){
+      if (typeof url === 'undefined' || url.length === 0){
+        this.log('inserting an image needs a url');
+        return;
+      }
+  
       var _this = this;
   
-      opts = opts || {};
-  
+      // make sure the placeholder is gone
       if (this.hasPlaceholder){
         this._removePlaceholder();
       }
   
+      // keep track and mark any images currently inserted
       this._registerImgs();
   
+      // insert the image with url
       this._execCmd('insertImage', url, function(){
+        // remove any attributes on the image we dont like
         _this._removeAttrs();
-        var $img = $(_this._newImg());
-        $img.attr('data-src', $img.attr('src'));
+  
+        // find the freshly inserted image and pass it to the callback if
+        // included
+        if (typeof cb === 'function'){
+          cb.call(this, _this._newImg());
+        }
+  
         _this._registerImgs();
       });
     },
