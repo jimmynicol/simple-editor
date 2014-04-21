@@ -23,7 +23,7 @@
   "devDependencies": {
     "connect": "~2.14.1",
     "connect-livereload": "~0.3.2",
-    "gulp": "~3.5.5",
+    "gulp": "~3.6.1",
     "gulp-jshint": "~1.5.3",
     "gulp-livereload": "~1.2.0",
     "gulp-load-plugins": "~0.4.0",

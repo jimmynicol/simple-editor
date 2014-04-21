@@ -9,6 +9,48 @@
 
   <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
   <script type="text/javascript" src="simple_editor.js"></script>
+
+  <style>
+    .f-content-section {
+      text-align: left;
+      color: black;
+      line-height: 1.35em;
+      font-family: "Roboto Condensed", Helvetica, Arial, sans-serif;
+      font-size: 18px;
+      font-weight: 300;
+      }
+      .f-content-section h2 {
+        font-size: 24px;
+        line-height: 1.35em;
+        padding-top: 0px;
+        padding-bottom: 30px;
+      }
+      .f-content-section ul {
+        margin-left: 14px;
+        padding-left: 36px; }
+      .f-content-section p, .f-content-section ul {
+        margin-top: 0px;
+        margin-bottom: 20px;
+      }
+      .f-content-section p, .f-content-section li {
+        line-height: inherit;
+        font-family: inherit;
+        font-size: inherit;
+        font-weight: inherit;
+      }
+      .f-content-section li {
+        list-style: disc; }
+      .f-content-section a {
+        font-weight: 300;
+        color: #59CAE9; }
+      .f-content-section a:hover {
+        text-decoration: underline; }
+      .f-content-section strong, .f-content-section b {
+        font-weight: 700; }
+      .f-content-section i, .f-content-section em {
+        font-style: italic;
+        font-weight: 300; }
+  </style>
 </head>
 <body>
   <div class="f-p-xlarge">
@@ -37,6 +79,9 @@
 
     <div class="f-m-t-medium f-b-xlight f-p-medium">
       <div id="editable" placeholder="This is a placeholder">
+        <h2>This is a sample header</h2>
+        <p>This is a sample paragraph with a <a><b>bold link</b></a>.</p>
+        <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Laboriosam, molestiae, fugit esse quos tenetur voluptates tempora amet praesentium explicabo aliquam illum ut necessitatibus nisi voluptas ab facilis perferendis vitae voluptate.</p>
       </div>
     </div>
   </div>

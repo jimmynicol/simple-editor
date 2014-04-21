@@ -90,6 +90,7 @@
       this._removeComments();
       this._removeTags();
       this._removeAttrs();
+      this.log('tidy complete');
     },
   
     _reTidy: function(){
@@ -115,6 +116,8 @@
     _removeTags: function(){
       var _this = this;
   
+      this.log('remove tags');
+  
       this.$target.find('*').each(function(i, el){
         var tagName = el.tagName.toLowerCase();
         if ( $.inArray(tagName, _this.options.tagWhiteList) === -1 ){
@@ -125,35 +128,44 @@
   
     // Remove all attributes we dont want
     _removeAttrs: function(){
-      var tags = $.map(this.options.tagWhiteList, function(n){
-        if ( n !== 'a' || n !== 'img' ){
+      var _this = this, tags, excludeTags = ['a', 'img'];
+  
+      tags = $.map(this.options.tagWhiteList, function(n){
+        if ( $.inArray(n.toLowerCase(), excludeTags) === -1) {
           return n.toLowerCase();
         }
       });
   
+      this.log('removeAttrs', tags);
+  
       // remove every attribute for the following tags
       this.$target.find(tags.join(', ')).each(function(iter, el){
-        for ( var i=0; i < el.attributes.length; i++){
-          var name = el.attributes[i].name;
-          $(el).removeAttr(name);
-        }
-      });
-  
-      // allow href and target for anchor tag
-      this.$target.find('a').each(function(iter, el){
-        for ( var i=0; i < el.attributes.length; i++ ){
-          var name = el.attributes[i].name;
-          if ( name !== 'href' || name !== 'target'){
+        var isPlaceholder = $(el).hasClass(_this.options.placeholderClass);
+        if (!isPlaceholder){
+          for ( var i=0; i < el.attributes.length; i++){
+            var name = el.attributes[i].name;
             $(el).removeAttr(name);
           }
         }
       });
   
-      // allow href and target for anchor tag
+      // remove any unnecessary attrs from anchor
+      var aAttrs = ['href', 'target'];
+      this.$target.find('a').each(function(iter, el){
+        for ( var i=0; i < el.attributes.length; i++ ){
+          var name = el.attributes[i].name;
+          if ( $.inArray(name, aAttrs) === -1 ){
+            $(el).removeAttr(name);
+          }
+        }
+      });
+  
+      // remove any unnecessary attrs from image
+      var imgAttrs = ['src', 'data-imgid', 'data-src'];
       this.$target.find('img').each(function(iter, el){
         for ( var i=0; i < el.attributes.length; i++ ){
           var name = el.attributes[i].name;
-          if ( name !== 'src'){
+          if ( $.inArray(name, imgAttrs) === -1 ){
             $(el).removeAttr(name);
           }
         }
@@ -164,48 +176,86 @@
   
   var Format = {
   
-    bold: function(){
-      document.execCommand('bold');
-    },
+    bold: function(){ this._execCmd('bold'); },
   
-    italic: function(){
-      document.execCommand('italic');
-    },
+    italic: function(){ this._execCmd('italic'); },
   
-    unorderedList: function(){
-      document.execCommand('insertUnorderedList');
-    },
+    unorderedList: function(){ this._execCmd('insertUnorderedList'); },
   
     heading: function(){
-      document.execCommand('formatBlock', false, '<' + this.options.headingElement + '>');
+      this._execCmd(
+        'formatBlock',
+        '<' + this.options.headingElement + '>'
+      );
     },
   
-    paragraph: function(){
-      document.execCommand('formatBlock', false, '<P>');
-    },
+    paragraph: function(){ this._execCmd('formatBlock', '<P>'); },
   
     link: function(url){
-      document.execCommand('createLink', false, url);
-      if (this.options.linkTarget.length > 0){
-        this.$target.find('a').prop('target', '_blank');
+      var _this = this;
+      this._execCmd('createLink', url, function(){
+        if (_this.options.linkTarget.length > 0){
+          _this.$target.find('a').prop('target', '_blank');
+        }
+      });
+    },
+  
+    unlink: function(){ this._execCmd('unlink'); },
+  
+    undo: function(){ this._execCmd('undo'); },
+  
+    redo: function(){ this._execCmd('redo'); },
+  
+    img: function(url, opts, cb){
+      var _this = this;
+  
+      opts = opts || {};
+  
+      if (this.hasPlaceholder){
+        this._removePlaceholder();
       }
+  
+      this._registerImgs();
+  
+      this._execCmd('insertImage', url, function(){
+        _this._removeAttrs();
+        var $img = $(_this._newImg());
+        $img.attr('data-src', $img.attr('src'));
+        _this._registerImgs();
+      });
     },
   
-    unlink: function(){
-      document.execCommand('unlink');
+    _registerImgs: function(){
+      this.$target.find('img').each(function(i, img){
+        if (typeof $(img).data('imgid') === 'undefined'){
+          $(img).data('imgid', i);
+        }
+      });
     },
   
-    undo: function(){
-      document.execCommand('undo');
+    _newImg: function(){
+      var imgs = this.$target.find('img');
+      for(var i in imgs){
+        var img = imgs[i];
+        if (typeof $(img).data('imgid') === 'undefined'){
+          return img;
+        }
+      };
+      return null;
     },
   
-    redo: function(){
-      document.execCommand('redo');
-    },
+    _execCmd: function(cmd, option, cb){
+      if (typeof option === 'undefined'){
+        document.execCommand(cmd);
+      } else {
+        document.execCommand(cmd, false, option);
+      }
   
-    img: function(link){
-      document.execCommand('insertImage', false, link);
-      this._removeAttrs();
+      this.target.focus();
+  
+      if ( typeof cb !== 'undefined' ){
+        cb.apply(this);
+      }
     }
   
   };
@@ -234,8 +284,8 @@
     };
   
     this.options.tagWhiteList = opts.tagWhiteList || [
-      'p', 'b', 'strong', 'i', 'em', 'span', 'br',
-      'ul', 'li', 'a', this.options.headingElement
+      'p', 'b', 'strong', 'i', 'em', 'span', 'br', 'img',
+      'ul', 'li', 'a', this.options.headingElement.toLowerCase()
     ];
   
     this._setupTarget();
@@ -243,6 +293,7 @@
     this._keyboardListeners();
   
     this.log('Simple Editor initialized!', target);
+    this.log('editor options', this.options);
   };
   
   // TODO:
@@ -315,7 +366,7 @@
         // add in the placeholder wrapped in a p tag
         var html = '<p><span contenteditable="false" ';
         html += 'class="' + this.options.placeholderClass + ' ';
-        html += this.options.css.placeholder + '">';
+        html += this.options.css.placeholder + '" contenteditable="false">';
         html += this.options.placeholder;
         html += '</span></p>';
   
@@ -343,6 +394,7 @@
     },
   
     contents: function(){
+      this.tidy();
       return $.trim(this.$target.html());
     },
   

@@ -5,6 +5,7 @@ var gulp =     require('gulp'),
     p =        require('gulp-load-plugins')({camelize: true}),
     stylish =  require('jshint-stylish'),
     util =     require('gulp-util'),
+    git =      require('gulp-git'),
     lr =       require('tiny-lr')(),
     connect =  require('connect'),
     pkg =      require('./package.json');
@@ -164,10 +165,6 @@ function ghPages(){
   });
 }
 
-gulp.task('gh-pages', ['scripts', 'dist'], function(){
-  gulp.src('./dist/*')
-    .pipe(p.git.add())
-    .pipe(p.git.commit('dist build'))
-    .pipe(p.git.push('origin', 'master'))
-    .pipe(ghPages());
+gulp.task('gh-pages', function(){
+  ghPages();
 });
