@@ -18,6 +18,7 @@ var config = {
 var banner = ['/**',
   ' * ' + pkg.name + ' - ' + pkg.description,
   ' * @author     ' + pkg.author,
+  ' * @version    ' + pkg.version,
   ' * @repository ' + pkg.repository.url,
   ' * @link       ' + pkg.homepage,
   ' * @license    ' + pkg.license,

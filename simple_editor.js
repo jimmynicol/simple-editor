@@ -1,6 +1,7 @@
 /**
  * simple-editor - Medium.com like editor with plugin architecture
  * @author     James Nicol
+ * @version    0.3.0
  * @repository git@github.com:jimmynicol/simple-editor.git
  * @link       https://github.com/jimmynicol/simple-editor
  * @license    MIT
@@ -116,8 +117,6 @@
     },
   
     _updateTags: function(){
-      var _this = this;
-  
       // clicking return when in a heading makes a div on a newline, need to
       // convert this to a p tag.
       this.$target.find('div').each(function(i, el){
@@ -281,7 +280,7 @@
         if (typeof $(t).data(tag + 'id') === 'undefined'){
           return t;
         }
-      };
+      }
       return null;
     },
   
@@ -293,7 +292,7 @@
         document.execCommand(cmd, false, option);
       }
   
-      var cmdState = document.queryCommandState(cmd);
+      // var cmdState = document.queryCommandState(cmd);
   
       this.target.focus();
   
