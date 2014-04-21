@@ -28,11 +28,11 @@
       .f-content-section ul {
         margin-left: 14px;
         padding-left: 36px; }
-      .f-content-section p, .f-content-section ul {
+      .f-content-section div, .f-content-section p, .f-content-section ul {
         margin-top: 0px;
         margin-bottom: 20px;
       }
-      .f-content-section p, .f-content-section li {
+      .f-content-section div, .f-content-section p, .f-content-section li {
         line-height: inherit;
         font-family: inherit;
         font-size: inherit;
@@ -83,12 +83,20 @@
         <p>This is a sample paragraph with a <a><b>bold link</b></a>.</p>
         <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Laboriosam, molestiae, fugit esse quos tenetur voluptates tempora amet praesentium explicabo aliquam illum ut necessitatibus nisi voluptas ab facilis perferendis vitae voluptate.</p>
       </div>
+
+      <!-- <div id="editable"></div> -->
     </div>
   </div>
 
   <script>
     $(function(){
-      window.editor = new SimpleEditor( '#editable', { minHeight: 600 } );
+      window.editor = new SimpleEditor( '#editable', {
+        minHeight: 600,
+        css: {
+          target: 'f-content-section',
+          placeholder: 'f-fc-medium f-font-italic f-fs-large'
+        }
+      });
 
       $('.js-bold').click(function(e){
         e.preventDefault();
@@ -112,7 +120,10 @@
       });
       $('.js-link').click(function(e){
         e.preventDefault();
-        editor.link('http://fundly.com');
+        editor.link('http://fundly.com', function(newLink){
+          $(newLink).attr('target', '_blank');
+          console.log('newLink', newLink);
+        });
       });
       $('.js-unlink').click(function(e){
         e.preventDefault();

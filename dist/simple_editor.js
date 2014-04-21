@@ -43,6 +43,8 @@
   // -----------------
   //  - simple logger, turned on via query string
   
+  var slice = [].slice;
+  
   var Log = {
   
     _canLog: false,
@@ -70,7 +72,8 @@
   
     log: function(){
       if (this._canLog){
-        console.log.apply(console, arguments);
+        var args = ['SimpleEditor:'].concat(slice.call(arguments));
+        console.log.apply(console, args);
       }
     }
   };
@@ -88,16 +91,16 @@
   
     tidy: function(){
       this._removeComments();
+      this._updateTags();
       this._removeTags();
       this._removeAttrs();
-      this.log('tidy complete');
     },
   
     _reTidy: function(){
       var _this = this;
   
       this._retidyTimer = setInterval(function(){
-        if (_this.$target.find('p[style]').length > 0){
+        if (_this.$target.find('p[style], p[class]').length > 0){
           _this.tidy();
           clearInterval(_this._retidyTimer);
         }
@@ -112,11 +115,26 @@
       this.$target.html(html);
     },
   
+    _updateTags: function(){
+      var _this = this;
+  
+      // clicking return when in a heading makes a div on a newline, need to
+      // convert this to a p tag.
+      this.$target.find('div').each(function(i, el){
+        var $el = $(el),
+            $newP = $('<p>').html($el.html());
+        $(el).replaceWith($newP);
+      });
+  
+      // wrap any hanging spans in a p tag
+      this.$target.find('> span').each(function(i, el){
+        $(el).wrap('<p></p>');
+      });
+    },
+  
     // Loop through all elements and remove tags we don't like
     _removeTags: function(){
       var _this = this;
-  
-      this.log('remove tags');
   
       // remove tags that are not in the whitelist
       this.$target.find('*').each(function(i, el){
@@ -142,8 +160,6 @@
         }
       });
   
-      this.log('removeAttrs', tags);
-  
       // remove every attribute for the following tags
       this.$target.find(tags.join(', ')).each(function(iter, el){
         var isPlaceholder = $(el).hasClass(_this.options.placeholderClass);
@@ -167,7 +183,7 @@
       });
   
       // remove any unnecessary attrs from image
-      var imgAttrs = ['src', 'data-imgid', 'data-src'];
+      var imgAttrs = ['src', 'data-src', 'style'];
       this.$target.find('img').each(function(iter, el){
         for ( var i=0; i < el.attributes.length; i++ ){
           var name = el.attributes[i].name;
@@ -197,12 +213,16 @@
   
     paragraph: function(){ this._execCmd('formatBlock', '<P>'); },
   
-    link: function(url){
+    link: function(url, cb){
       var _this = this;
+  
+      this._registerTags('a');
+  
       this._execCmd('createLink', url, function(){
-        if (_this.options.linkTarget.length > 0){
-          _this.$target.find('a').prop('target', '_blank');
+        if (typeof cb === 'function'){
+          cb.call(_this, _this._newTag('a'));
         }
+        _this._registerTags('a');
       });
     },
   
@@ -226,7 +246,7 @@
       }
   
       // keep track and mark any images currently inserted
-      this._registerImgs();
+      this._registerTags('img');
   
       // insert the image with url
       this._execCmd('insertImage', url, function(){
@@ -236,38 +256,44 @@
         // find the freshly inserted image and pass it to the callback if
         // included
         if (typeof cb === 'function'){
-          cb.call(this, _this._newImg());
+          cb.call(_this, _this._newTag('img'));
         }
   
-        _this._registerImgs();
+        _this._registerTags('img');
       });
     },
   
-    _registerImgs: function(){
-      this.$target.find('img').each(function(i, img){
-        if (typeof $(img).data('imgid') === 'undefined'){
-          $(img).data('imgid', i);
+    // Loop through all existing tags and add an id to them
+    _registerTags: function(tag){
+      this.$target.find(tag).each(function(i, tag){
+        var tagId = tag + 'id';
+        if (typeof $(tag).data(tagId) === 'undefined'){
+          $(tag).data(tagId, i);
         }
       });
     },
   
-    _newImg: function(){
-      var imgs = this.$target.find('img');
-      for(var i in imgs){
-        var img = imgs[i];
-        if (typeof $(img).data('imgid') === 'undefined'){
-          return img;
+    // Return the newly created tag
+    _newTag: function(tag){
+      var tags = this.$target.find(tag);
+      for(var i in tags){
+        var t = tags[i];
+        if (typeof $(t).data(tag + 'id') === 'undefined'){
+          return t;
         }
       };
       return null;
     },
   
+    // Execute the desired command on the editor
     _execCmd: function(cmd, option, cb){
       if (typeof option === 'undefined'){
         document.execCommand(cmd);
       } else {
         document.execCommand(cmd, false, option);
       }
+  
+      var cmdState = document.queryCommandState(cmd);
   
       this.target.focus();
   
@@ -278,6 +304,8 @@
   
   };
   var SimpleEditor = function(target, opts){
+    this.log('initializing...');
+  
     opts = opts || {};
   
     this.$target = $(target);
@@ -291,12 +319,11 @@
   
     this.options = {
       css: {
-        target: opts.cssClass || 'f-content-section',
-        placeholder: opts.placeholderClass || 'f-fc-medium f-font-italic f-fs-large',
+        target: opts.css.target || '',
+        placeholder: opts.css.placeholder || '',
       },
-      headingElement: (opts.headingElement || 'h2').toUpperCase(),
       minHeight: opts.minHeight || 100,
-      linkTarget: opts.linkTarget || '_blank',
+      headingElement: (opts.headingElement || 'h2').toUpperCase(),
       placeholder: opts.placeholder || this.$target.attr('placeholder') || null,
       placeholderClass: opts.placeholderClass || 'SimpleEditor-placeholder'
     };
@@ -306,19 +333,32 @@
       'ul', 'li', 'a', this.options.headingElement.toLowerCase()
     ];
   
+    // run some preprocessing
     this._setupTarget();
     this._placeholder();
     this._keyboardListeners();
+    this.tidy();
   
-    this.log('Simple Editor initialized!', target);
-    this.log('editor options', this.options);
+    // if the editor is empty prepopulate an empty p tag to start writing into
+    if (this.isEmpty()){
+      // for some reason the cursor will not jump into a tag that has no height
+      var lineHeight = this.$target.css('lineHeight');
+  
+      // so giving it a height makes this work... sigh
+      this.$target.append('<p style="min-height: ' + lineHeight + '"> </p>');
+  
+      // set the cursor and give the editor focus
+      this.setCursor(0);
+      this.target.focus();
+    }
+  
+    this.log('options', this.options);
+    this.log('initialized!', target);
   };
   
   // TODO:
-  //  - link plugin
-  //  - image insert plugin
   //  - autosave, write to localStorage where available
-  //  - handle adding paragraph when no placeholder in place
+  //  - track the current formatting option
   
   SimpleEditor.prototype = {
   
@@ -331,6 +371,13 @@
         outline: 'none',
         minHeight: this.options.minHeight,
       });
+  
+      // make sure any changes are rendered as pure html and not with inline
+      // styles
+      document.execCommand('styleWithCSS', false, true);
+  
+      // stop images from being resized
+      document.execCommand('enableObjectResizing', false, false);
   
       this.$target.on('focus', function(){
         if (_this.hasPlaceholder){
@@ -423,14 +470,14 @@
       position = typeof position !== 'undefined' ? position : ($(elem).text().length - 1);
       position = position < 0 ? 0 : position;
   
-      this.log('setCursor', position, elem);
-  
       if( document.createRange ){
-        var selection = window.getSelection(),
-            elemText = elem.firstChild;
+        var selection = window.getSelection();
   
-        selection.collapse(elemText, position);
-        elem.parentNode.focus();
+        range = document.createRange();
+        range.setStart(elem, position);
+        range.collapse(true);
+        selection.removeAllRanges();
+        selection.addRange(range);
       } else {
         range = document.body.createTextRange();
         range.moveToElementText(elem);
@@ -449,7 +496,7 @@
     Format
   );
 
-  SimpleEditor.VERSION = '0.0.1';
+  SimpleEditor.VERSION = '0.2.0';
 
   return SimpleEditor;
 }));

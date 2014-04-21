@@ -114,7 +114,7 @@ gulp.task('dist', function(){
 
 
 // --------
-// Task for pushing the project to Github pages
+// Tasks for bumping the version
 // --------
 gulp.task('bump:major', ['scripts', 'dist'], function(){
   gulp.src(['./bower.json', './package.json'])
