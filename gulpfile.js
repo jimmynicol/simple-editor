@@ -138,33 +138,15 @@ gulp.task('bump:patch', ['scripts', 'dist'], function(){
 // --------
 // Task for pushing the project to Github pages
 // --------
-var ghRun = 0;
-function ghPages(){
-  var map = require('map-stream'),
-      exec = require('child_process').exec,
-      cmd = 'git push origin :gh-pages && git subtree push --prefix dist origin gh-pages';
-      // cmd = 'git subtree push --prefix dist origin gh-pages';
-
-  return map( function(file, cb){
-    if (ghRun > 0){
-      cb(null, file);
-      return;
-    }
-
-    ghRun++;
-
-    exec(cmd, {}, function(err, stdout, stderr){
-      if(err) {
-        util.log(err);
-      } else {
-        util.log(stdout, stderr);
-      }
-
-      cb(null, file);
-    });
-  });
-}
-
 gulp.task('gh-pages', function(){
-  ghPages();
+  var exec = require('child_process').exec,
+      cmd = 'git push origin :gh-pages && git subtree push --prefix dist origin gh-pages';
+
+  exec(cmd, {}, function(err, stdout, stderr){
+    if(err) {
+      util.log(err);
+    } else {
+      util.log(stdout, stderr);
+    }
+  });
 });
