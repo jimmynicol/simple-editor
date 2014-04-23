@@ -1,7 +1,7 @@
 /**
  * simple-editor - Medium.com like editor with plugin architecture
  * @author     James Nicol
- * @version    0.3.1
+ * @version    0.4.0
  * @repository git@github.com:jimmynicol/simple-editor.git
  * @link       https://github.com/jimmynicol/simple-editor
  * @license    MIT
@@ -513,7 +513,7 @@
     Format
   );
 
-  SimpleEditor.VERSION = '0.3.1';
+  SimpleEditor.VERSION = '0.4.0';
 
   return SimpleEditor;
 }));
