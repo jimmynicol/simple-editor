@@ -287,7 +287,7 @@
     // Execute the desired command on the editor
     _execCmd: function(cmd, option, cb){
       if (typeof option === 'undefined'){
-        document.execCommand(cmd);
+        document.execCommand(cmd, false, null);
       } else {
         document.execCommand(cmd, false, option);
       }
@@ -316,6 +316,7 @@
     this.target = this.$target[0];
     this.hasPlaceholder = false;
   
+    // set default options, and extend with instance specific ones
     this.options = {
       css: {
         target: opts.css.target || '',
@@ -327,29 +328,23 @@
       placeholderClass: opts.placeholderClass || 'SimpleEditor-placeholder'
     };
   
+    // set the list of allowable tags
     this.options.tagWhiteList = opts.tagWhiteList || [
       'p', 'b', 'strong', 'i', 'em', 'span', 'br', 'img',
       'ul', 'li', 'a', this.options.headingElement.toLowerCase()
     ];
+  
+    // set any event handlers
+    if (opts.onInit){
+      this.options.onInit = opts.onInit;
+    }
   
     // run some preprocessing
     this._setupTarget();
     this._placeholder();
     this._keyboardListeners();
     this.tidy();
-  
-    // if the editor is empty prepopulate an empty p tag to start writing into
-    if (this.isEmpty()){
-      // for some reason the cursor will not jump into a tag that has no height
-      var lineHeight = this.$target.css('lineHeight');
-  
-      // so giving it a height makes this work... sigh
-      this.$target.append('<p style="min-height: ' + lineHeight + '"> </p>');
-  
-      // set the cursor and give the editor focus
-      this.setCursor(0);
-      this.target.focus();
-    }
+    this._handleEmptyEditor();
   
     this.log('options', this.options);
     this.log('initialized!', target);
@@ -360,6 +355,14 @@
   //  - track the current formatting option
   
   SimpleEditor.prototype = {
+  
+    // Event handling, wrapper around the jQuery object
+    on:  function(){ this.$target.on.apply(this.$target, arguments); },
+    one: function(){ this.$target.one.apply(this.$target, arguments); },
+    off: function(){ this.$target.off.apply(this.$target, arguments); },
+    trigger: function(){
+      this.$target.trigger.apply(this.$target, arguments);
+    },
   
     _setupTarget: function(){
       var _this = this;
@@ -419,6 +422,21 @@
         // if the editor is empty add the placeholder back
         _this._placeholder();
       });
+    },
+  
+    _handleEmptyEditor: function(){
+      // if the editor is empty prepopulate an empty p tag to start writing into
+      if (this.isEmpty()){
+        // for some reason the cursor will not jump into a tag that has no height
+        var lineHeight = this.$target.css('lineHeight');
+  
+        // so giving it a height makes this work... sigh
+        this.$target.append('<p style="min-height: ' + lineHeight + '"> </p>');
+  
+        // set the cursor and give the editor focus
+        this.setCursor(0);
+        this.target.focus();
+      }
     },
   
     _placeholder: function(){
