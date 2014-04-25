@@ -1,7 +1,7 @@
 /**
  * simple-editor - Medium.com like editor with plugin architecture
  * @author     James Nicol
- * @version    0.4.0
+ * @version    0.3.1
  * @repository git@github.com:jimmynicol/simple-editor.git
  * @link       https://github.com/jimmynicol/simple-editor
  * @license    MIT
@@ -19,21 +19,21 @@
   // AMD
   if (typeof define === 'function' && define.amd) {
     define(['jquery'], function($){
-      return factory(root, $);
+      return factory($);
     });
 
   // CommonJS: for Node.js or Browserify
   } else if (typeof exports !== 'undefined') {
     var $ = require('jquery');
 
-    module.exports = factory(root, $);
+    module.exports = factory($);
 
   // Finally, as a browser global.
   } else {
-    root.SimpleEditor = factory(root, root.jQuery);
+    root.SimpleEditor = factory(root.jQuery);
   }
 
-}(this, function(root, $){
+}(this, function($){
   'use strict';
 
   // pull out some functions from primitive prototypes
@@ -171,22 +171,20 @@
       });
   
       // remove any unnecessary attrs from anchor
-      var aAttrs = ['href', 'target'];
       this.$target.find('a').each(function(iter, el){
         for ( var i=0; i < el.attributes.length; i++ ){
           var name = el.attributes[i].name;
-          if ( $.inArray(name, aAttrs) === -1 ){
+          if ( $.inArray(name, _this.options.attributeWhiteList.a) === -1 ){
             $(el).removeAttr(name);
           }
         }
       });
   
       // remove any unnecessary attrs from image
-      var imgAttrs = ['src', 'data-src', 'style'];
       this.$target.find('img').each(function(iter, el){
         for ( var i=0; i < el.attributes.length; i++ ){
           var name = el.attributes[i].name;
-          if ( $.inArray(name, imgAttrs) === -1 ){
+          if ( $.inArray(name, _this.options.attributeWhiteList.img) === -1 ){
             $(el).removeAttr(name);
           }
         }
@@ -195,6 +193,9 @@
   
   };
   
+  // Public formatting methods
+  // -----------------
+  
   var Format = {
   
     bold: function(){ this._execCmd('bold'); },
@@ -202,6 +203,8 @@
     italic: function(){ this._execCmd('italic'); },
   
     unorderedList: function(){ this._execCmd('insertUnorderedList'); },
+  
+    orderedList: function(){ this._execCmd('insertOrderedList'); },
   
     heading: function(){
       this._execCmd(
@@ -302,8 +305,12 @@
     }
   
   };
+  
+  // Core editor object
+  // -----------------
+  
   var SimpleEditor = function(target, opts){
-    this.log('initializing...');
+    this.log('initializing...', opts);
   
     opts = opts || {};
   
@@ -316,7 +323,6 @@
     this.target = this.$target[0];
     this.hasPlaceholder = false;
   
-    // set default options, and extend with instance specific ones
     this.options = {
       css: {
         target: opts.css.target || '',
@@ -325,16 +331,23 @@
       minHeight: opts.minHeight || 100,
       headingElement: (opts.headingElement || 'h2').toUpperCase(),
       placeholder: opts.placeholder || this.$target.attr('placeholder') || null,
-      placeholderClass: opts.placeholderClass || 'SimpleEditor-placeholder'
+      placeholderClass: opts.placeholderClass || 'SimpleEditor-placeholder',
+      attributeWhiteList: {
+        img: ['src'],
+        a: ['href', 'target']
+      }
     };
   
-    // set the list of allowable tags
+    if (opts.attributeWhiteList){
+      $.extend(this.options.attributeWhiteList, opts.attributeWhiteList);
+    }
+  
     this.options.tagWhiteList = opts.tagWhiteList || [
       'p', 'b', 'strong', 'i', 'em', 'span', 'br', 'img',
       'ul', 'li', 'a', this.options.headingElement.toLowerCase()
     ];
   
-    // set any event handlers
+    // attach any event handler
     if (opts.onInit){
       this.options.onInit = opts.onInit;
     }
@@ -346,8 +359,13 @@
     this.tidy();
     this._handleEmptyEditor();
   
+    if (this.options.onInit){
+      this.options.onInit.call(this);
+    }
+    this.trigger('editor:init');
+  
     this.log('options', this.options);
-    this.log('initialized!', target);
+    this.log('initialized!');
   };
   
   // TODO:
@@ -356,7 +374,7 @@
   
   SimpleEditor.prototype = {
   
-    // Event handling, wrapper around the jQuery object
+    // Event delegation, wrapper around the jQuery object
     on:  function(){ this.$target.on.apply(this.$target, arguments); },
     one: function(){ this.$target.one.apply(this.$target, arguments); },
     off: function(){ this.$target.off.apply(this.$target, arguments); },
@@ -374,18 +392,37 @@
         minHeight: this.options.minHeight,
       });
   
-      // make sure any changes are rendered as pure html and not with inline
-      // styles
-      document.execCommand('styleWithCSS', false, true);
+      try {
+        // make sure any changes are rendered as pure html and not with inline
+        // styles
+        document.execCommand('styleWithCSS', false, false);
   
-      // stop images from being resized
-      document.execCommand('enableObjectResizing', false, false);
+        // stop images from being resized
+        document.execCommand('enableObjectResizing', false, false);
+      } catch(e){
+        this.log('error running execCommands', e);
+      }
   
       this.$target.on('focus', function(){
         if (_this.hasPlaceholder){
           _this.setCursor(0);
         }
       });
+    },
+  
+    // If the editor is empty prepopulate an empty p tag to start writing into
+    _handleEmptyEditor: function(){
+      if (this.isEmpty()){
+        // for some reason the cursor will not jump into a tag that has no height
+        var lineHeight = this.$target.css('lineHeight');
+  
+        // so giving it a height makes this work... sigh
+        this.$target.append('<p style="min-height: ' + lineHeight + '"> </p>');
+  
+        // set the cursor and give the editor focus
+        this.setCursor(0);
+        this.target.focus();
+      }
     },
   
     _keyboardListeners: function(){
@@ -424,21 +461,6 @@
       });
     },
   
-    _handleEmptyEditor: function(){
-      // if the editor is empty prepopulate an empty p tag to start writing into
-      if (this.isEmpty()){
-        // for some reason the cursor will not jump into a tag that has no height
-        var lineHeight = this.$target.css('lineHeight');
-  
-        // so giving it a height makes this work... sigh
-        this.$target.append('<p style="min-height: ' + lineHeight + '"> </p>');
-  
-        // set the cursor and give the editor focus
-        this.setCursor(0);
-        this.target.focus();
-      }
-    },
-  
     _placeholder: function(){
       if (!this.options.placeholder || !this.isEmpty()){
         return;
@@ -475,9 +497,13 @@
       return $.trim(text).length === 0;
     },
   
-    contents: function(){
+    contents: function(preProcess){
       this.tidy();
-      return $.trim(this.$target.html());
+      var html = this.$target.html();
+      if (typeof preProcess === 'function'){
+        html = preProcess.call(this, html);
+      }
+      return $.trim(html);
     },
   
     setCursor: function(position, elem){
@@ -501,6 +527,34 @@
         range.collapse(false);
         range.select();
       }
+    },
+  
+    selection: {
+      save: function() {
+        if (window.getSelection) {
+          var sel = window.getSelection();
+          if (sel.rangeCount > 0) {
+            return sel.getRangeAt(0);
+          }
+        // IE
+        } else if (document.selection && document.selection.createRange) {
+          return document.selection.createRange();
+        }
+        return null;
+      },
+  
+      restore: function(range) {
+        if (range) {
+          if (window.getSelection) {
+            var sel = window.getSelection();
+            sel.removeAllRanges();
+            sel.addRange(range);
+          // IE
+          } else if (document.selection && range.select) {
+            range.select();
+          }
+        }
+      }
     }
   
   };
@@ -513,7 +567,7 @@
     Format
   );
 
-  SimpleEditor.VERSION = '0.4.0';
+  SimpleEditor.VERSION = '0.3.1';
 
   return SimpleEditor;
 }));
