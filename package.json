@@ -1,6 +1,6 @@
 {
   "name": "simple-editor",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "description": "Medium.com like editor with plugin architecture",
   "main": "simple_editor.js",
   "repository": {
