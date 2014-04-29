@@ -151,6 +151,8 @@
   
     // Remove all attributes we dont want
     _removeAttrs: function(){
+      console.log('_removeAttrs');
+  
       var _this = this, tags, excludeTags = ['a', 'img'];
   
       tags = $.map(this.options.tagWhiteList, function(n){
@@ -258,7 +260,8 @@
         // find the freshly inserted image and pass it to the callback if
         // included
         if (typeof cb === 'function'){
-          cb.call(_this, _this._newTag('img'));
+          var newImg = _this._newTag('img');
+          cb.call(_this, newImg);
         }
   
         _this._registerTags('img');
@@ -266,9 +269,9 @@
     },
   
     // Loop through all existing tags and add an id to them
-    _registerTags: function(tag){
-      this.$target.find(tag).each(function(i, tag){
-        var tagId = tag + 'id';
+    _registerTags: function(tagName){
+      var tagId = tagName + 'id';
+      this.$target.find(tagName).each(function(i, tag){
         if (typeof $(tag).data(tagId) === 'undefined'){
           $(tag).data(tagId, i);
         }
@@ -276,12 +279,15 @@
     },
   
     // Return the newly created tag
-    _newTag: function(tag){
-      var tags = this.$target.find(tag);
-      for(var i in tags){
-        var t = tags[i];
-        if (typeof $(t).data(tag + 'id') === 'undefined'){
-          return t;
+    _newTag: function(tagName){
+      var tag,
+          tags = this.$target.find(tagName),
+          tagId = tagName + 'id';
+  
+      for (var i in tags){
+        tag = tags[i];
+        if (typeof $(tag).data(tagId) === 'undefined'){
+          return tag;
         }
       }
       return null;
@@ -294,8 +300,6 @@
       } else {
         document.execCommand(cmd, false, option);
       }
-  
-      // var cmdState = document.queryCommandState(cmd);
   
       this.target.focus();
   
@@ -494,7 +498,11 @@
   
     isEmpty: function(){
       var text = this.$target.text();
-      return $.trim(text).length === 0;
+      if ($.trim(text).length === 0){
+        return this.$target.find('img').length === 0;
+      } else {
+        return false;
+      }
     },
   
     contents: function(preProcess){

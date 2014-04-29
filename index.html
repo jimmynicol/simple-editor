@@ -79,13 +79,13 @@
     </ul>
 
     <div class="f-m-t-medium f-b-xlight f-p-medium">
-      <div id="editable" placeholder="This is a placeholder">
+<!--       <div id="editable" placeholder="This is a placeholder">
         <h2>This is a sample header</h2>
         <p>This is a sample paragraph with a <a>link</a>.</p>
         <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Laboriosam, molestiae, fugit esse quos tenetur voluptates tempora amet praesentium explicabo aliquam illum ut necessitatibus nisi voluptas ab facilis perferendis vitae voluptate.</p>
-      </div>
+      </div> -->
 
-      <!-- <div id="editable"></div> -->
+      <div id="editable" placeholder="This is a placeholder!"></div>
     </div>
   </div>
 
@@ -96,6 +96,9 @@
         css: {
           target: 'f-content-section',
           placeholder: 'f-fc-medium f-font-italic f-fs-large'
+        },
+        attributeWhiteList: {
+          img: ['src', 'data-src', 'style']
         }
       });
 
@@ -132,10 +135,24 @@
       });
       $('.js-image').click(function(e){
         e.preventDefault();
-        var imgLink = 'https://d8dkyqrw18ein.cloudfront.net/s/977bd995b8a84531cf7d01b9813381bc_ar_w600_h400.jpg';
+
+        var imgs = [
+          'https://d8dkyqrw18ein.cloudfront.net/s/977bd995b8a84531cf7d01b9813381bc_ar_w600_h400.jpg',
+          'https://d8dkyqrw18ein.cloudfront.net/s/310a960d189bf7f71c233a1306f42060_ar_w600_h400.jpg',
+          'https://d8dkyqrw18ein.cloudfront.net/s/0037cae3920426df83a501817ac598b9_as_w150_h150.jpg',
+          'https://pbs.twimg.com/media/BijA2RxIQAEfp5N.jpg:medium'
+        ];
+        var imgLink = imgs[editor.$target.find('img').length];
+
         editor.img(imgLink, function(newImg){
-          $(newImg)
-            .css({ height: '200px' })
+          var $newImg = $(newImg);
+
+          if (newImg.parentNode === editor.target){
+            $newImg.wrap('<p></p>');
+          }
+
+          $newImg
+            .css({ 'maxHeight': '200px' })
             .attr('data-src', $(newImg).attr('src'));
         });
       });
